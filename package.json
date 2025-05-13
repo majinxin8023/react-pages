@@ -15,6 +15,7 @@
   "license": "ISC",
   "dependencies": {
     "@antv/f2": "^4.0.44",
+    "@apollo/client": "^3.13.8",
     "antd-mobile": "^5.14.3",
     "axios": "^0.27.2",
     "echarts": "^5.4.1",

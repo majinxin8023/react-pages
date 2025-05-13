@@ -5,7 +5,7 @@ import './index.css';
 
 // 创建Apollo客户端
 const client = new ApolloClient({
-    uri: 'https://deepseek-graphql-worker.your-subdomain.workers.dev',
+    uri: 'https://deepseek-graphql-worker.majx3009.workers.dev/',
     cache: new InMemoryCache()
 });
 
@@ -33,7 +33,7 @@ function ChatInterface() {
 
     const [generateChat] = useMutation(GENERATE_CHAT);
 
-    const handleSendMessage = async (e) => {
+    const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!input.trim()) return;
 

@@ -9,7 +9,7 @@ import { useState } from "react";
 
 // 配置 Apollo Client
 const client = new ApolloClient({
-  uri: "http://localhost:8787/graphql",
+  uri: "https://deepseek-graphql-worker.majx3009.workers.dev/graphql",
   cache: new InMemoryCache(),
   defaultOptions: {
     watchQuery: {

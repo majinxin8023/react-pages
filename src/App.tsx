@@ -1,107 +1,170 @@
-import React, { useState } from 'react';
-import { ApolloClient, InMemoryCache, ApolloProvider, gql, useMutation } from '@apollo/client';
+import {
+  ApolloClient,
+  InMemoryCache,
+  ApolloProvider,
+  gql,
+  useLazyQuery,
+} from "@apollo/client";
+import { useState } from "react";
 
-// 定义消息接口
-interface Message {
-  text: string;
-  isUser: boolean;
-}
+// 配置 Apollo Client
+const client = new ApolloClient({
+  uri: "http://localhost:8787/graphql",
+  cache: new InMemoryCache(),
+  defaultOptions: {
+    watchQuery: {
+      fetchPolicy: "network-only",
+    },
+    query: {
+      fetchPolicy: "network-only",
+    },
+  },
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
-// 定义 GraphQL mutation
+// GraphQL 查询
 const SEND_MESSAGE = gql`
-  mutation SendMessage($message: String!) {
-    sendMessage(message: $message) {
-      response
+  query Chat($message: String!) {
+    chat(message: $message) {
+      success
+      reply
+      message
     }
   }
 `;
 
-// 初始化 Apollo Client
-const client = new ApolloClient({
-  uri: 'https://deepseek-graphql-worker.majx3009.workers.dev/', // 替换为你的 Cloudflare Worker URL
-  cache: new InMemoryCache(),
-});
+// 聊天组件
+function Chat() {
+  const [message, setMessage] = useState("");
+  const [chatHistory, setChatHistory] = useState<
+    Array<{ type: "user" | "assistant"; content: string }>
+  >([]);
+  const [sendMessage, { loading }] = useLazyQuery(SEND_MESSAGE);
 
-/**
- * 聊天组件，处理对话 UI
- * 管理用户输入、发送消息和显示响应
- */
-const Chat: React.FC = () => {
-  const [message, setMessage] = useState<string>('');
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [sendMessage, { loading, error }] = useMutation<{ sendMessage: { response: string } }>(SEND_MESSAGE, {
-    onCompleted: (data) => {
-      // 将用户消息和 AI 响应添加到对话中
-      setMessages([
-        ...messages,
-        { text: message, isUser: true },
-        { text: data.sendMessage.response, isUser: false },
-      ]);
-      setMessage(''); // 清空输入框
-    },
-  });
-
-  // 处理表单提交
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (message.trim()) {
-      sendMessage({ variables: { message } });
+    if (!message.trim()) return;
+
+    // 添加用户消息到聊天历史
+    setChatHistory((prev) => [...prev, { type: "user", content: message }]);
+
+    try {
+      const { data } = await sendMessage({
+        variables: { message },
+      });
+
+      if (data?.chat?.success) {
+        // 添加助手回复到聊天历史
+        setChatHistory((prev) => [
+          ...prev,
+          { type: "assistant", content: data.chat.reply },
+        ]);
+      } else {
+        // 处理错误情况
+        setChatHistory((prev) => [
+          ...prev,
+          {
+            type: "assistant",
+            content:
+              data?.chat?.message ||
+              "Sorry, there was an error processing your message.",
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          type: "assistant",
+          content: "Sorry, there was an error processing your message.",
+        },
+      ]);
     }
+
+    setMessage("");
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100">
-      {/* 头部 */}
-      <header className="bg-blue-600 text-white p-4 text-center">
-        <h1 className="text-xl font-bold">与 DeepSeek 聊天</h1>
-      </header>
-
-      {/* 聊天消息 */}
-      <div className="flex-1 p-4 overflow-y-auto">
-        {messages.map((msg, index) => (
+    <div
+      className="chat-container"
+      style={{ maxWidth: "800px", margin: "0 auto", padding: "20px" }}
+    >
+      <div
+        className="chat-history"
+        style={{
+          height: "400px",
+          overflowY: "auto",
+          border: "1px solid #ccc",
+          padding: "10px",
+          marginBottom: "20px",
+          borderRadius: "4px",
+        }}
+      >
+        {chatHistory.map((msg, index) => (
           <div
             key={index}
-            className={`my-2 p-3 rounded-lg max-w-[75%] ${
-              msg.isUser ? 'bg-blue-500 text-white ml-auto' : 'bg-gray-300 text-black mr-auto'
-            }`}
+            style={{
+              marginBottom: "10px",
+              padding: "8px",
+              backgroundColor: msg.type === "user" ? "#e3f2fd" : "#f5f5f5",
+              borderRadius: "4px",
+              maxWidth: "80%",
+              marginLeft: msg.type === "user" ? "auto" : "0",
+            }}
           >
-            {msg.text}
+            {msg.content}
           </div>
         ))}
-        {loading && <div className="text-center text-gray-500">加载中...</div>}
-        {error && <div className="text-center text-red-500">错误: {error.message}</div>}
       </div>
-
-      {/* 输入表单 */}
-      <div className="p-4 bg-white border-t">
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="输入你的消息..."
-            className="flex-1 p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
-          >
-            发送
-          </button>
-        </form>
-      </div>
+      <form onSubmit={handleSubmit} style={{ display: "flex", gap: "10px" }}>
+        <input
+          type="text"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Type your message..."
+          style={{
+            flex: 1,
+            padding: "8px",
+            borderRadius: "4px",
+            border: "1px solid #ccc",
+          }}
+          disabled={loading}
+        />
+        <button
+          type="submit"
+          style={{
+            padding: "8px 16px",
+            backgroundColor: "#1976d2",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: loading ? "not-allowed" : "pointer",
+            opacity: loading ? 0.7 : 1,
+          }}
+          disabled={loading}
+        >
+          {loading ? "Sending..." : "Send"}
+        </button>
+      </form>
     </div>
   );
-};
+}
 
-/**
- * 根组件，将 Chat 包裹在 ApolloProvider 中
- */
-const App: React.FC = () => (
-  <ApolloProvider client={client}>
-    <Chat />
-  </ApolloProvider>
-);
+// 主应用
+function App() {
+  return (
+    <ApolloProvider client={client}>
+      <div style={{ padding: "20px" }}>
+        <h1 style={{ textAlign: "center", marginBottom: "20px" }}>
+          DeepSeek Chat
+        </h1>
+        <Chat />
+      </div>
+    </ApolloProvider>
+  );
+}
 
 export default App;

@@ -3,7 +3,6 @@
  */
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const UnoCSS = require('@unocss/webpack').default;
 
 module.exports = {
   mode: 'development',
@@ -11,7 +10,6 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'bundle.js',
-    clean: true,
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
@@ -21,7 +19,7 @@ module.exports = {
       {
         test: /\.(ts|tsx)$/,
         exclude: /node_modules/,
-        use: ['babel-loader', 'ts-loader'],
+        use: 'ts-loader',
       },
       {
         test: /\.css$/,
@@ -32,14 +30,14 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       template: './public/index.html',
-      inject: 'body',
     }),
-    new UnoCSS(), // 确保 UnoCSS 插件正确加载
   ],
   devServer: {
-    static: path.join(__dirname, 'dist'),
-    compress: true,
+    static: {
+      directory: path.join(__dirname, 'public'),
+    },
     port: 3000,
     hot: true,
+    open: true,
   },
 };

@@ -40,16 +40,35 @@ const SEND_MESSAGE = gql`
 function Chat() {
   const [message, setMessage] = useState("");
   const [chatHistory, setChatHistory] = useState<
-    Array<{ type: "user" | "assistant"; content: string }>
+    Array<{ type: "user" | "assistant"; content: string; id: string }>
   >([]);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [sendMessage, { loading }] = useLazyQuery(SEND_MESSAGE);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) return;
 
+    const userMessageId = `user-${Date.now()}`;
+    const assistantMessageId = `assistant-${Date.now()}`;
+
     // 添加用户消息到聊天历史
-    setChatHistory((prev) => [...prev, { type: "user", content: message }]);
+    setChatHistory((prev) => [
+      ...prev,
+      { type: "user", content: message, id: userMessageId },
+    ]);
+
+    // 添加一个临时的"生成中"消息
+    setChatHistory((prev) => [
+      ...prev,
+      {
+        type: "assistant",
+        content: "",
+        id: assistantMessageId,
+      },
+    ]);
+
+    setIsGenerating(true);
 
     try {
       const { data } = await sendMessage({
@@ -57,32 +76,43 @@ function Chat() {
       });
 
       if (data?.chat?.success) {
-        // 添加助手回复到聊天历史
-        setChatHistory((prev) => [
-          ...prev,
-          { type: "assistant", content: data.chat.reply },
-        ]);
+        // 更新助手回复内容
+        setChatHistory((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMessageId
+              ? { ...msg, content: data.chat.reply }
+              : msg
+          )
+        );
       } else {
         // 处理错误情况
-        setChatHistory((prev) => [
-          ...prev,
-          {
-            type: "assistant",
-            content:
-              data?.chat?.message ||
-              "Sorry, there was an error processing your message.",
-          },
-        ]);
+        setChatHistory((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMessageId
+              ? {
+                  ...msg,
+                  content:
+                    data?.chat?.message ||
+                    "Sorry, there was an error processing your message.",
+                }
+              : msg
+          )
+        );
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      setChatHistory((prev) => [
-        ...prev,
-        {
-          type: "assistant",
-          content: "Sorry, there was an error processing your message.",
-        },
-      ]);
+      setChatHistory((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId
+            ? {
+                ...msg,
+                content: "Sorry, there was an error processing your message.",
+              }
+            : msg
+        )
+      );
+    } finally {
+      setIsGenerating(false);
     }
 
     setMessage("");
@@ -104,9 +134,9 @@ function Chat() {
           borderRadius: "4px",
         }}
       >
-        {chatHistory.map((msg, index) => (
+        {chatHistory.map((msg) => (
           <div
-            key={index}
+            key={msg.id}
             style={{
               marginBottom: "10px",
               padding: "8px",
@@ -117,7 +147,22 @@ function Chat() {
             }}
           >
             {msg.type === "assistant" ? (
-              <ReactMarkdown>{msg.content}</ReactMarkdown>
+              msg.content ? (
+                <ReactMarkdown>{msg.content}</ReactMarkdown>
+              ) : (
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                >
+                  <div className="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                  <span style={{ color: "#666", fontSize: "14px" }}>
+                    正在生成回答...
+                  </span>
+                </div>
+              )
             ) : (
               msg.content
             )}
@@ -136,7 +181,7 @@ function Chat() {
             borderRadius: "4px",
             border: "1px solid #ccc",
           }}
-          disabled={loading}
+          disabled={isGenerating}
         />
         <button
           type="submit"
@@ -146,12 +191,12 @@ function Chat() {
             color: "white",
             border: "none",
             borderRadius: "4px",
-            cursor: loading ? "not-allowed" : "pointer",
-            opacity: loading ? 0.7 : 1,
+            cursor: isGenerating ? "not-allowed" : "pointer",
+            opacity: isGenerating ? 0.7 : 1,
           }}
-          disabled={loading}
+          disabled={isGenerating}
         >
-          {loading ? "Sending..." : "Send"}
+          {isGenerating ? "生成中..." : "发送"}
         </button>
       </form>
     </div>

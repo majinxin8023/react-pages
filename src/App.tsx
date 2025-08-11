@@ -44,42 +44,6 @@ function Chat() {
   >([]);
   const [sendMessage, { loading }] = useLazyQuery(SEND_MESSAGE);
 
-  // 添加测试 Markdown 功能
-  const addTestMarkdown = () => {
-    const testContent = `# 这是一个 Markdown 测试
-
-## 功能特性
-- **粗体文本**
-- *斜体文本*
-- \`行内代码\`
-
-## 代码块示例
-\`\`\`javascript
-function hello() {
-  console.log("Hello, Markdown!");
-}
-\`\`\`
-
-## 列表
-1. 有序列表项 1
-2. 有序列表项 2
-3. 有序列表项 3
-
-## 引用
-> 这是一个引用块，用来展示重要的信息。
-
-## 链接和图片
-[访问 GitHub](https://github.com)
-
----
-*Markdown 渲染测试完成*`;
-
-    setChatHistory((prev) => [
-      ...prev,
-      { type: "assistant", content: testContent },
-    ]);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) return;
@@ -129,22 +93,6 @@ function hello() {
       className="chat-container"
       style={{ maxWidth: "800px", margin: "0 auto", padding: "20px" }}
     >
-      <div style={{ marginBottom: "20px", textAlign: "center" }}>
-        <button
-          onClick={addTestMarkdown}
-          style={{
-            padding: "10px 20px",
-            backgroundColor: "#4caf50",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-            fontSize: "14px",
-          }}
-        >
-          测试 Markdown 渲染
-        </button>
-      </div>
       <div
         className="chat-history"
         style={{
@@ -169,9 +117,7 @@ function hello() {
             }}
           >
             {msg.type === "assistant" ? (
-              <div className="markdown-content">
-                <ReactMarkdown>{msg.content}</ReactMarkdown>
-              </div>
+              <ReactMarkdown>{msg.content}</ReactMarkdown>
             ) : (
               msg.content
             )}

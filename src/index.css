@@ -159,3 +159,197 @@ code {
     opacity: 1;
   }
 }
+
+/* 移动端 H5 适配样式 */
+@media (max-width: 768px) {
+  /* 基础响应式调整 */
+  body {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* 标题响应式 */
+  h1 {
+    font-size: 1.5rem !important;
+    margin: 10px 0 !important;
+  }
+
+  h2 {
+    font-size: 1.3rem !important;
+  }
+
+  h3 {
+    font-size: 1.1rem !important;
+  }
+
+  /* 导航菜单移动端优化 */
+  nav {
+    padding: 15px 0 !important;
+    margin-bottom: 20px !important;
+  }
+
+  nav a {
+    display: inline-block !important;
+    padding: 10px 20px !important;
+    margin: 5px !important;
+    border-radius: 20px !important;
+    background-color: #f5f5f5 !important;
+    transition: all 0.3s ease !important;
+  }
+
+  nav a:hover,
+  nav a:active {
+    background-color: #1976d2 !important;
+    color: white !important;
+  }
+
+  /* 聊天容器移动端优化 */
+  .chat-container {
+    padding: 10px !important;
+    max-width: 100% !important;
+  }
+
+  /* 聊天历史记录移动端优化 */
+  .chat-history {
+    height: 60vh !important;
+    max-height: 400px !important;
+    padding: 8px !important;
+  }
+
+  /* 消息气泡移动端优化 */
+  .chat-history > div {
+    max-width: 90% !important;
+    margin-bottom: 8px !important;
+    padding: 10px !important;
+    font-size: 14px !important;
+  }
+
+  /* 输入框和按钮移动端优化 */
+  form {
+    flex-direction: column !important;
+    gap: 15px !important;
+  }
+
+  input[type="text"] {
+    padding: 12px !important;
+    font-size: 16px !important; /* 防止 iOS 缩放 */
+    border-radius: 8px !important;
+    min-height: 44px !important; /* 触摸友好尺寸 */
+  }
+
+  button[type="submit"] {
+    padding: 12px 24px !important;
+    font-size: 16px !important;
+    border-radius: 8px !important;
+    min-height: 44px !important; /* 触摸友好尺寸 */
+    width: 100% !important;
+  }
+
+  /* 关于页面移动端优化 */
+  .about-container {
+    padding: 15px !important;
+  }
+
+  /* 列表移动端优化 */
+  ul,
+  ol {
+    padding-left: 15px !important;
+  }
+
+  li {
+    margin: 8px 0 !important;
+  }
+
+  /* 表格移动端优化 */
+  .markdown-content table {
+    font-size: 12px !important;
+  }
+
+  .markdown-content th,
+  .markdown-content td {
+    padding: 6px !important;
+  }
+
+  /* 代码块移动端优化 */
+  .markdown-content pre {
+    padding: 10px !important;
+    font-size: 12px !important;
+    overflow-x: auto !important;
+  }
+
+  .markdown-content code {
+    font-size: 12px !important;
+  }
+}
+
+/* 超小屏幕适配 */
+@media (max-width: 480px) {
+  body {
+    font-size: 13px !important;
+  }
+
+  .chat-container {
+    padding: 5px !important;
+  }
+
+  .chat-history {
+    height: 55vh !important;
+  }
+
+  nav a {
+    padding: 8px 16px !important;
+    font-size: 14px !important;
+  }
+
+  input[type="text"],
+  button[type="submit"] {
+    min-height: 48px !important;
+  }
+}
+
+/* 横屏模式优化 */
+@media (max-height: 500px) and (orientation: landscape) {
+  .chat-history {
+    height: 50vh !important;
+    max-height: 300px !important;
+  }
+
+  nav {
+    padding: 10px 0 !important;
+    margin-bottom: 15px !important;
+  }
+
+  h1 {
+    margin: 5px 0 !important;
+  }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+  /* 触摸设备上的交互优化 */
+  button:hover {
+    transform: none !important;
+  }
+
+  nav a:hover {
+    background-color: #f5f5f5 !important;
+    color: #1976d2 !important;
+  }
+
+  /* 触摸反馈 */
+  button:active,
+  nav a:active {
+    transform: scale(0.98) !important;
+    transition: transform 0.1s ease !important;
+  }
+}
+
+/* 高分辨率屏幕优化 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* 为高分辨率屏幕优化边框和阴影 */
+  .chat-history,
+  input[type="text"],
+  button[type="submit"] {
+    border-width: 0.5px !important;
+  }
+}
